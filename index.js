@@ -70,16 +70,44 @@ app.post("/upload", upload.single("profileImage"), async (req, res) => {
 });
 
 // GET endpoint to retrieve an image by a link
-app.get("/:imageName", (req, res) => {
+app.get("/:imageName", async (req, res) => {
   const imageName = req.params.imageName;
-  const imageUrl = `https://firebasestorage.googleapis.com/v0/b/asset-cocola.appspot.com/o/uploads%2F${imageName}?alt=media`;
+  const file = bucket.file(`uploads/${imageName}`);
 
-  // Set cache headers for one year
-  res.header("Cache-Control", "public, max-age=31536000");
+  try {
+    const [fileExists] = await file.exists();
 
-  // Redirect to the Firebase Storage URL
-  return res.redirect(imageUrl);
+    if (!fileExists) {
+      return res.status(404).json({ error: "Image not found" });
+    }
+
+    const readStream = file.createReadStream();
+
+    // Set content type based on file extension or use a default content type
+    const contentType = getContentType(imageName);
+    res.setHeader("Content-Type", contentType);
+
+    // Set cache headers for one year
+    res.header("Cache-Control", "public, max-age=31536000");
+
+    // Pipe the file content to the response
+    readStream.pipe(res);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
 });
+
+function getContentType(fileName) {
+  // Add more content types based on your needs
+  if (fileName.endsWith(".png")) {
+    return "image/png";
+  } else if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+    return "image/jpeg";
+  } else {
+    return "application/octet-stream"; // default content type
+  }
+}
 
 // Start the server
 app.listen(PORT, () => {
