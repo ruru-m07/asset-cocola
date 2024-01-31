@@ -1,3 +1,3 @@
-const app = require("../index")
+const server = require("../index")
 
-module.exports = app
+module.exports = server
