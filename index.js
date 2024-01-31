@@ -78,8 +78,8 @@ app.get("/:imageName", (req, res) => {
 });
 
 // Start the server
-const server = app.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-module.exports = server;
+module.exports = app;
