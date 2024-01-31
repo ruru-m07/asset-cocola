@@ -29,8 +29,12 @@ const upload = multer({
 const allowedDomains = [
   "http://localhost:3000",
   "https://cocola.vercel.app",
-  "http://127.0.0.1:5500",
+  // "http://127.0.0.1:5500",
 ];
+
+app.get("/", (req, res) => {
+  return res.json({"message": "welcome to cocola asset menagement area"});
+});
 
 // POST endpoint for uploading images
 app.post("/upload", upload.single("profileImage"), async (req, res) => {
