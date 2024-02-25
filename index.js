@@ -4,9 +4,25 @@ const admin = require("firebase-admin");
 const cors = require("cors");
 const compression = require("compression");
 const { v4: uuidv4 } = require("uuid");
-const sharp = require('sharp');
+const sharp = require("sharp");
 
-const serviceAccount = require("./asset-cocola-firebase-adminsdk-5oxgh-5e79b5a466.json");
+require("dotenv").config();
+
+const serviceAccount = {
+  type: process.env.TYPE,
+  project_id: process.env.PROJECT_ID,
+  private_key_id: process.env.PRIVATE_KEY_ID,
+  private_key: process.env.PRIVATE_KEY.replace(/\\n/g, '\n'),
+  client_email: process.env.CLIENT_EMAIL,
+  client_id: process.env.CLIENT_ID,
+  auth_uri: process.env.AUTH_URI,
+  token_uri: process.env.TOKEN_URI,
+  auth_provider_x509_cert_url: process.env.AUTH_PROVIDER_X509_CERT_URL,
+  client_x509_cert_url: process.env.CLIENT_X509_CERT_URL,
+  universe_domain: process.env.UNIVERSE_DOMAIN,
+};
+
+console.log(serviceAccount)
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -54,12 +70,14 @@ app.post("/upload", upload.single("profileImage"), async (req, res) => {
 
   // Resize and compress the image
   const resizedImageBuffer = await sharp(req.file.buffer)
-  .resize({ width: 247 }) // Resize to a maximum width of 247 pixels (adjust as needed)
-  .toFormat('jpeg', { quality: 75 }) // Convert to JPEG format with 80% quality
-  .toBuffer();
+    .resize({ width: 247 }) // Resize to a maximum width of 247 pixels (adjust as needed)
+    .toFormat("jpeg", { quality: 75 }) // Convert to JPEG format with 80% quality
+    .toBuffer();
 
   // Generate a unique file name
-  const uniqueFileName = `${Date.now()}_${uuidv4()}_${Math.random().toString(36).substring(7)}.jpeg`;
+  const uniqueFileName = `${Date.now()}_${uuidv4()}_${Math.random()
+    .toString(36)
+    .substring(7)}.jpeg`;
 
   const file = bucket.file(`uploads/${uniqueFileName}`);
   const stream = file.createWriteStream({
@@ -77,7 +95,11 @@ app.post("/upload", upload.single("profileImage"), async (req, res) => {
     // Construct the URL for the uploaded file
     const imageUrl = `https://asset-cocola.vercel.app/${uniqueFileName}`;
 
-    return res.json({ success: true, message: "File uploaded successfully", imageUrl });
+    return res.json({
+      success: true,
+      message: "File uploaded successfully",
+      imageUrl,
+    });
   });
 
   stream.end(resizedImageBuffer);
