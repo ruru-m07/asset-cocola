@@ -22,7 +22,6 @@ const serviceAccount = {
   universe_domain: process.env.UNIVERSE_DOMAIN,
 };
 
-console.log(serviceAccount)
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -34,7 +33,6 @@ const bucket = admin.storage().bucket();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors()); // Enable CORS for all routes
 app.use(compression()); // Enable compression for response payload
 
 const upload = multer({
@@ -43,25 +41,12 @@ const upload = multer({
   },
 });
 
-// Define allowed domains for image uploads
-const allowedDomains = [
-  "http://localhost:3000",
-  "https://cocola.vercel.app",
-  "http://127.0.0.1:5500",
-];
-
 app.get("/", (req, res) => {
   return res.json({ message: "welcome to cocola asset menagement area" });
 });
 
 // POST endpoint for uploading images
 app.post("/upload", upload.single("profileImage"), async (req, res) => {
-  const origin = req.get("Origin");
-
-  // Check if the request is from an allowed domain
-  if (!allowedDomains.includes(origin)) {
-    return res.status(403).json({ error: "Forbidden: Unauthorized domain" });
-  }
 
   // Access the uploaded file through req.file
   if (!req.file) {
