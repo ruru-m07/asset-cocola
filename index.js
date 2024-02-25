@@ -48,6 +48,8 @@ app.get("/", (req, res) => {
 // POST endpoint for uploading images
 app.post("/upload", upload.single("profileImage"), async (req, res) => {
 
+  res.setHeader("Access-Control-Allow-Origin", "*");
+
   // Access the uploaded file through req.file
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
