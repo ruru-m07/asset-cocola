@@ -22,7 +22,6 @@ const serviceAccount = {
   universe_domain: process.env.UNIVERSE_DOMAIN,
 };
 
-
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   storageBucket: "asset-cocola.appspot.com",
@@ -42,7 +41,7 @@ const upload = multer({
 });
 
 app.get("/", (req, res) => {
-  return res.json({ message: "welcome to cocola asset menagement area" });
+  return res.json({ message: "welcome to cocola asset management area" });
 });
 
 // POST endpoint for uploading images
@@ -58,13 +57,13 @@ app.post("/upload", upload.single("profileImage"), async (req, res) => {
   // Resize and compress the image
   const resizedImageBuffer = await sharp(req.file.buffer)
     .resize({ width: 247 }) // Resize to a maximum width of 247 pixels (adjust as needed)
-    .toFormat("jpeg", { quality: 75 }) // Convert to JPEG format with 80% quality
+    // .toFormat("jpeg", { quality: 75 }) // Convert to JPEG format with 80% quality
     .toBuffer();
 
   // Generate a unique file name
-  const uniqueFileName = `${Date.now()}_${uuidv4()}_${Math.random()
+  const uniqueFileName = `${uuidv4()}_${Date.now()}_${Math.random()
     .toString(36)
-    .substring(7)}.jpeg`;
+    .substring(7)}.${req.file.originalname.split('.').pop()}`;
 
   const file = bucket.file(`uploads/${uniqueFileName}`);
   const stream = file.createWriteStream({
