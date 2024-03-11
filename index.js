@@ -12,7 +12,7 @@ const serviceAccount = {
   type: process.env.TYPE,
   project_id: process.env.PROJECT_ID,
   private_key_id: process.env.PRIVATE_KEY_ID,
-  private_key: process.env.PRIVATE_KEY.replace(/\\n/g, '\n'),
+  private_key: process.env.PRIVATE_KEY.replace(/\\n/g, "\n"),
   client_email: process.env.CLIENT_EMAIL,
   client_id: process.env.CLIENT_ID,
   auth_uri: process.env.AUTH_URI,
@@ -45,7 +45,8 @@ app.get("/", (req, res) => {
 });
 
 // POST endpoint for uploading images
-app.post("/upload", upload.single("profileImage"), async (req, res) => {
+app.post("/upload/:user", upload.single("profileImage"), async (req, res) => {
+  const user = req.params.user;
 
   res.setHeader("Access-Control-Allow-Origin", "*");
 
@@ -61,11 +62,12 @@ app.post("/upload", upload.single("profileImage"), async (req, res) => {
     .toBuffer();
 
   // Generate a unique file name
-  const uniqueFileName = `${uuidv4()}_${Date.now()}_${Math.random()
-    .toString(36)
-    .substring(7)}.${req.file.originalname.split('.').pop()}`;
+  // const uniqueFileName = `${uuidv4()}_${Date.now()}_${Math.random()
+  //   .toString(36)
+  //   .substring(7)}.${req.file.originalname.split('.').pop()}`;
+  const uniqueFileName = user;
 
-  const file = bucket.file(`uploads/${uniqueFileName}`);
+  const file = bucket.file(`uploads/${uniqueFileName}.png`);
   const stream = file.createWriteStream({
     metadata: {
       contentType: req.file.mimetype,
@@ -79,7 +81,7 @@ app.post("/upload", upload.single("profileImage"), async (req, res) => {
 
   stream.on("finish", async () => {
     // Construct the URL for the uploaded file
-    const imageUrl = `https://asset-cocola.vercel.app/${uniqueFileName}`;
+    const imageUrl = `https://asset-cocola.vercel.app/${uniqueFileName}.png`;
 
     return res.json({
       success: true,
