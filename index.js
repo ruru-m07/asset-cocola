@@ -1,10 +1,9 @@
 const express = require("express");
 const multer = require("multer");
 const admin = require("firebase-admin");
-const cors = require("cors");
 const compression = require("compression");
-const { v4: uuidv4 } = require("uuid");
 const sharp = require("sharp");
+const { createCanvas } = require("canvas");
 
 require("dotenv").config();
 
@@ -40,6 +39,60 @@ const upload = multer({
   },
 });
 
+const generateAvatar = async (user) => {
+  // Create a canvas element
+  const canvas = createCanvas(420, 420);
+  const ctx = canvas.getContext("2d");
+
+  // Function to generate a random hex color
+  function getRandomColor() {
+    const letters = "0123456789ABCDEF";
+    let color = "#";
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  }
+
+  // Create a linear gradient with random colors
+  const gradient = ctx.createLinearGradient(0, 0, 420, 420);
+  gradient.addColorStop(0, getRandomColor()); // Start color
+  gradient.addColorStop(1, getRandomColor()); // End color
+
+  // Apply the gradient to the canvas
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 420, 420);
+
+  // Convert the canvas content to base64
+  const base64Image = canvas.toDataURL();
+
+  // Upload the base64 image to Firebase Storage
+  const imageBuffer = Buffer.from(
+    base64Image.replace(/^data:image\/\w+;base64,/, ""),
+    "base64"
+  );
+  const uniqueFileName = `${user}.png`;
+  const file = bucket.file(`uploads/${uniqueFileName}`);
+  await file.save(imageBuffer, {
+    metadata: {
+      contentType: "image/png",
+    },
+  });
+
+  return `https://asset-cocola.vercel.app/${uniqueFileName}`;
+};
+
+const getContentType = (fileName) => {
+  // Add more content types based on your needs
+  if (fileName.endsWith(".png")) {
+    return "image/png";
+  } else if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+    return "image/jpeg";
+  } else {
+    return "application/octet-stream"; // default content type
+  }
+};
+
 app.get("/", (req, res) => {
   return res.json({ message: "welcome to cocola asset management area" });
 });
@@ -58,13 +111,8 @@ app.post("/upload/:user", upload.single("profileImage"), async (req, res) => {
   // Resize and compress the image
   const resizedImageBuffer = await sharp(req.file.buffer)
     .resize({ width: 247 }) // Resize to a maximum width of 247 pixels (adjust as needed)
-    // .toFormat("jpeg", { quality: 75 }) // Convert to JPEG format with 80% quality
     .toBuffer();
 
-  // Generate a unique file name
-  // const uniqueFileName = `${uuidv4()}_${Date.now()}_${Math.random()
-  //   .toString(36)
-  //   .substring(7)}.${req.file.originalname.split('.').pop()}`;
   const uniqueFileName = user;
 
   const file = bucket.file(`uploads/${uniqueFileName}.png`);
@@ -91,6 +139,24 @@ app.post("/upload/:user", upload.single("profileImage"), async (req, res) => {
   });
 
   stream.end(resizedImageBuffer);
+});
+
+// POST endpoint for generating and uploading an avatar image
+app.post("/generateAvatar/:user", async (req, res) => {
+  console.log("start generate avatar...");
+  const user = req.params.user;
+
+  try {
+    const imageUrl = await generateAvatar(user);
+    return res.json({
+      success: true,
+      message: "Avatar generated and uploaded successfully",
+      imageUrl,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // GET endpoint to retrieve an image by a link
@@ -121,17 +187,6 @@ app.get("/:imageName", async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-function getContentType(fileName) {
-  // Add more content types based on your needs
-  if (fileName.endsWith(".png")) {
-    return "image/png";
-  } else if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
-    return "image/jpeg";
-  } else {
-    return "application/octet-stream"; // default content type
-  }
-}
 
 // Start the server
 app.listen(PORT, () => {
