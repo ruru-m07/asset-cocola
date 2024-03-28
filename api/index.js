@@ -178,7 +178,7 @@ app.get("/:imageName", async (req, res) => {
     res.setHeader("Content-Type", contentType);
 
     // Set cache headers for one year
-    res.header("Cache-Control", "public, max-age=31536000");
+    // res.header("Cache-Control", "public, max-age=31536000");
 
     // Pipe the file content to the response
     readStream.pipe(res);
