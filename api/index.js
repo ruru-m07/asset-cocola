@@ -94,7 +94,7 @@ const getContentType = (fileName) => {
 };
 
 app.get("/", (req, res) => {
-  res.json({ message: "welcome to cocola asset management area" });
+  return res.json({ message: "welcome to cocola asset management area" });
 });
 
 // POST endpoint for uploading images
@@ -105,7 +105,7 @@ app.post("/upload/:user", upload.single("profileImage"), async (req, res) => {
 
   // Access the uploaded file through req.file
   if (!req.file) {
-    res.status(400).json({ error: "No file uploaded" });
+    return res.status(400).json({ error: "No file uploaded" });
   }
 
   // Resize and compress the image
@@ -124,14 +124,14 @@ app.post("/upload/:user", upload.single("profileImage"), async (req, res) => {
 
   stream.on("error", (err) => {
     console.error(err);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   });
 
   stream.on("finish", async () => {
     // Construct the URL for the uploaded file
     const imageUrl = `https://asset-cocola.vercel.app/${uniqueFileName}.png`;
 
-    res.json({
+    return res.json({
       success: true,
       message: "File uploaded successfully",
       imageUrl,
@@ -148,14 +148,14 @@ app.post("/generateAvatar/:user", async (req, res) => {
 
   try {
     const imageUrl = await generateAvatar(user);
-    res.json({
+    return res.json({
       success: true,
       message: "Avatar generated and uploaded successfully",
       imageUrl,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -168,7 +168,7 @@ app.get("/:imageName", async (req, res) => {
     const [fileExists] = await file.exists();
 
     if (!fileExists) {
-      res.status(404).json({ error: "Image not found" });
+      return res.status(404).json({ error: "Image not found" });
     }
 
     const readStream = file.createReadStream();
@@ -184,7 +184,7 @@ app.get("/:imageName", async (req, res) => {
     readStream.pipe(res);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
