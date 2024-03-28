@@ -40,18 +40,6 @@ Please provide some steps for the reviewer to test your change. If you have wrot
 3. Validate you see the thing working
 -->
 
-## Added to documentation?
-
-- [ ] 📜 README.md
-- [ ] 📓 docs.opensauced.pizza
-- [ ] 🍕 dev.to/opensauced
-- [ ] 📕 storybook
-- [ ] 🙅 no documentation needed
-
-## [optional] Are there any post-deployment tasks we need to perform?
-
-## [optional] What gif best describes this PR or how it makes you feel?
-
 <!-- note: PRs with deleted sections will be marked invalid -->
 
 <!--
